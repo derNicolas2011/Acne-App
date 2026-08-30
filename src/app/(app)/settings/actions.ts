@@ -38,7 +38,7 @@ export async function deleteAllData(
   try {
     const [photos, userMeals] = await Promise.all([
       db
-        .select({ id: skinPhotos.id, path: skinPhotos.imageUrl })
+        .select({ id: skinPhotos.id, front: skinPhotos.frontImageUrl, left: skinPhotos.leftImageUrl, right: skinPhotos.rightImageUrl })
         .from(skinPhotos)
         .where(eq(skinPhotos.userId, userId)),
       db
@@ -47,7 +47,7 @@ export async function deleteAllData(
         .where(eq(meals.userId, userId)),
     ]);
 
-    const skinPaths = photos.map((p) => p.path).filter(Boolean);
+    const skinPaths = photos.flatMap((p) => [p.front, p.left, p.right]).filter(Boolean);
     const mealPaths = userMeals.map((m) => m.path).filter((p): p is string => Boolean(p));
 
     if (skinPaths.length > 0) {

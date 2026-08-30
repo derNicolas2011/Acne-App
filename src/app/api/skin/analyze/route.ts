@@ -8,12 +8,10 @@ import { analyzeSkinPhoto } from '@/lib/ai/skin-analysis';
 import { getLatestAnalysis } from '@/lib/queries/skin';
 import { getUserId } from '@/lib/session';
 
-/** Die Bildanalyse braucht länger als der Vercel-Standard von 10 s. */
 export const maxDuration = 60;
 
 const bodySchema = z.object({ photoId: z.string().min(1).max(64) });
 
-/** MIME-Typ aus der Dateiendung im Storage-Pfad. */
 function contentTypeFor(path: string): string {
   const extension = path.split('.').pop()?.toLowerCase();
   switch (extension) {
@@ -48,7 +46,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Photo-ID fehlt' }, { status: 400 });
   }
 
-  // Foto nur laden, wenn es dem angemeldeten Nutzer gehört.
   const [photo] = await db
     .select()
     .from(skinPhotos)
@@ -60,13 +57,22 @@ export async function POST(request: Request) {
   }
 
   try {
-    const buffer = await downloadPhotoAsBuffer(SKIN_PHOTOS_BUCKET, photo.imageUrl);
-    const imageBase64 = `data:${contentTypeFor(photo.imageUrl)};base64,${buffer.toString('base64')}`;
+    const [frontBuffer, leftBuffer, rightBuffer] = await Promise.all([
+      downloadPhotoAsBuffer(SKIN_PHOTOS_BUCKET, photo.frontImageUrl),
+      downloadPhotoAsBuffer(SKIN_PHOTOS_BUCKET, photo.leftImageUrl),
+      downloadPhotoAsBuffer(SKIN_PHOTOS_BUCKET, photo.rightImageUrl),
+    ]);
+
+    const imagesBase64 = [
+      `data:${contentTypeFor(photo.frontImageUrl)};base64,${frontBuffer.toString('base64')}`,
+      `data:${contentTypeFor(photo.leftImageUrl)};base64,${leftBuffer.toString('base64')}`,
+      `data:${contentTypeFor(photo.rightImageUrl)};base64,${rightBuffer.toString('base64')}`,
+    ];
 
     const previous = await getLatestAnalysis(userId);
 
     const result = await analyzeSkinPhoto({
-      imageBase64,
+      imagesBase64,
       previousScore: previous?.score ?? undefined,
       previousSummary: previous?.summary ?? undefined,
     });

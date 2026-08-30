@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils';
 
 export interface HistoryEntry extends ChartPoint {
   analysisId: string;
-  signedUrl: string | null;
+  frontPhotoUrl: string | null;
 }
 
 const RANGES = [
@@ -110,10 +110,10 @@ export function SkinHistory({
                 <li key={entry.analysisId}>
                   <Link href={`/skin/${entry.analysisId}`} className="block press">
                     <Surface padded={false} className="flex items-center gap-3.5 p-3">
-                      {entry.signedUrl ? (
+                      {entry.frontPhotoUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
-                          src={entry.signedUrl}
+                          src={entry.frontPhotoUrl}
                           alt=""
                           className="size-14 shrink-0 rounded-xl border border-border object-cover"
                         />

@@ -12,7 +12,7 @@ export interface ComparePhoto {
   analysisId: string;
   date: string;
   score: number | null;
-  signedUrl: string | null;
+  frontPhotoUrl: string | null;
 }
 
 function formatDate(date: string): string {
@@ -107,24 +107,24 @@ export function PhotoCompare({ entries }: { entries: ComparePhoto[] }) {
             draggingRef.current = false;
           }}
         >
-          {after.signedUrl && (
+          {after.frontPhotoUrl && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={after.signedUrl}
+              src={after.frontPhotoUrl}
               alt={`Hautfoto vom ${formatDate(after.date)}`}
               className="absolute inset-0 size-full object-cover"
               draggable={false}
             />
           )}
 
-          {before.signedUrl && (
+          {before.frontPhotoUrl && (
             <div
               className="absolute inset-0 overflow-hidden"
               style={{ clipPath: `inset(0 ${100 - position}% 0 0)` }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={before.signedUrl}
+                src={before.frontPhotoUrl}
                 alt={`Hautfoto vom ${formatDate(before.date)}`}
                 className="absolute inset-0 size-full object-cover"
                 draggable={false}
@@ -233,10 +233,10 @@ function SidePhoto({ caption, entry }: { caption: string; entry: ComparePhoto })
   return (
     <figure>
       <div className="relative aspect-[3/4] overflow-hidden rounded-2xl border border-border bg-muted">
-        {entry.signedUrl ? (
+        {entry.frontPhotoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={entry.signedUrl}
+            src={entry.frontPhotoUrl}
             alt={`Hautfoto vom ${formatDate(entry.date)}`}
             className="size-full object-cover"
           />

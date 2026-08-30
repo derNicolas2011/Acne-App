@@ -45,7 +45,7 @@ export default async function SkinPage() {
     redness: entry.redness,
     inflammation: entry.inflammation,
     visibleLesions: entry.visibleLesions,
-    signedUrl: entry.signedUrl,
+    frontPhotoUrl: entry.frontPhotoUrl,
   }));
 
   return (
@@ -72,7 +72,7 @@ export default async function SkinPage() {
           <TodaySkinHero
             data={{
               analysisId: todayAnalysis.analysisId,
-              photoUrl: todayEntry?.signedUrl ?? null,
+              frontPhotoUrl: todayEntry?.frontPhotoUrl ?? null,
               score: todayAnalysis.score,
               summary: todayAnalysis.summary,
               yesterdayScore,

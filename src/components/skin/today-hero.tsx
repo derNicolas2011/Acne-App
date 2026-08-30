@@ -8,7 +8,7 @@ import { scoreLabel } from '@/lib/score';
 
 export interface TodayHeroData {
   analysisId: string;
-  photoUrl: string | null;
+  frontPhotoUrl: string | null;
   score: number | null;
   summary: string | null;
   yesterdayScore: number | null;
@@ -38,11 +38,11 @@ export function TodaySkinHero({ data }: { data: TodayHeroData }) {
       </div>
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-        {data.photoUrl ? (
+        {data.frontPhotoUrl ? (
           <Link href={`/skin/${data.analysisId}`} className="block press sm:w-40 sm:shrink-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={data.photoUrl}
+              src={data.frontPhotoUrl}
               alt="Hautfoto von heute"
               className="max-h-[42dvh] w-full rounded-xl border border-border object-cover sm:max-h-none"
             />

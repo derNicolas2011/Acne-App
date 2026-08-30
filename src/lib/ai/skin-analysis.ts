@@ -18,15 +18,15 @@ export const skinAnalysisSchema = z.object({
 });
 
 export async function analyzeSkinPhoto({
-  imageBase64,
+  imagesBase64,
   previousScore,
   previousSummary,
 }: {
-  imageBase64: string;
+  imagesBase64: string[];
   previousScore?: number;
   previousSummary?: string;
 }) {
-  let prompt = 'Bitte analysiere dieses Bild der Gesichtshaut.';
+  let prompt = 'Hier sind drei Bilder der Gesichtshaut (Vorne, Linke Wange, Rechte Wange). Bitte analysiere sie als Ganzes.';
   
   if (previousScore !== undefined || previousSummary !== undefined) {
     prompt += '\n\nKontext zur vorherigen Analyse:';
@@ -43,7 +43,7 @@ export async function analyzeSkinPhoto({
         role: 'user',
         content: [
           { type: 'text', text: prompt },
-          { type: 'image', image: imageBase64 }
+          ...imagesBase64.map(image => ({ type: 'image' as const, image }))
         ],
       },
     ],

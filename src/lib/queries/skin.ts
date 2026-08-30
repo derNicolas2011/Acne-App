@@ -12,7 +12,9 @@ const photoDate = sql`DATE(${skinPhotos.takenAt} AT TIME ZONE ${sql.raw(`'${APP_
 export interface SkinEntry {
   analysisId: string;
   photoId: string;
-  imagePath: string;
+  frontImagePath: string;
+  leftImagePath: string;
+  rightImagePath: string;
   date: string;
   takenAt: Date;
   score: number | null;
@@ -25,7 +27,9 @@ export interface SkinEntry {
 const entryColumns = {
   analysisId: skinAnalyses.id,
   photoId: skinPhotos.id,
-  imagePath: skinPhotos.imageUrl,
+  frontImagePath: skinPhotos.frontImageUrl,
+  leftImagePath: skinPhotos.leftImageUrl,
+  rightImagePath: skinPhotos.rightImageUrl,
   date: sql<string>`${photoDate}::text`,
   takenAt: skinPhotos.takenAt,
   score: skinAnalyses.score,
@@ -83,13 +87,20 @@ export async function countSkinEntries(userId: string): Promise<number> {
  * Einzelsignierung pro Eintrag hatte bei langen Verläufen hunderte
  * Requests pro Seitenaufruf erzeugt.
  */
-export async function withSignedUrls<T extends { imagePath: string }>(
+export async function withSignedUrls<
+  T extends { frontImagePath: string; leftImagePath: string; rightImagePath: string }
+>(
   entries: T[]
-): Promise<(T & { signedUrl: string | null })[]> {
-  const urls = await signSkinPhotos(entries.map((e) => e.imagePath));
+): Promise<
+  (T & { frontPhotoUrl: string | null; leftPhotoUrl: string | null; rightPhotoUrl: string | null })[]
+> {
+  const allPaths = entries.flatMap((e) => [e.frontImagePath, e.leftImagePath, e.rightImagePath]);
+  const urls = await signSkinPhotos(allPaths);
   return entries.map((entry) => ({
     ...entry,
-    signedUrl: urls.get(entry.imagePath) ?? null,
+    frontPhotoUrl: urls.get(entry.frontImagePath) ?? null,
+    leftPhotoUrl: urls.get(entry.leftImagePath) ?? null,
+    rightPhotoUrl: urls.get(entry.rightImagePath) ?? null,
   }));
 }
 
@@ -138,14 +149,29 @@ export async function getAnalysisById(userId: string, analysisId: string) {
 
   if (!row) return null;
 
-  let photoUrl: string | null = null;
+  let frontPhotoUrl: string | null = null;
+  let leftPhotoUrl: string | null = null;
+  let rightPhotoUrl: string | null = null;
   try {
-    photoUrl = await signSkinPhoto(row.photo.imageUrl);
+    const urls = await signSkinPhotos([
+      row.photo.frontImageUrl,
+      row.photo.leftImageUrl,
+      row.photo.rightImageUrl,
+    ]);
+    frontPhotoUrl = urls.get(row.photo.frontImageUrl) ?? null;
+    leftPhotoUrl = urls.get(row.photo.leftImageUrl) ?? null;
+    rightPhotoUrl = urls.get(row.photo.rightImageUrl) ?? null;
   } catch (error) {
-    console.error('Signierte URL konnte nicht erzeugt werden:', error);
+    console.error('Signierte URLs konnten nicht erzeugt werden:', error);
   }
 
-  return { ...row.analysis, takenAt: row.photo.takenAt, photoUrl };
+  return {
+    ...row.analysis,
+    takenAt: row.photo.takenAt,
+    frontPhotoUrl,
+    leftPhotoUrl,
+    rightPhotoUrl,
+  };
 }
 
 /** Die Analyse unmittelbar vor einer gegebenen — für den Vergleich. */

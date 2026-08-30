@@ -5,16 +5,19 @@ import { skinPhotos } from '@/lib/db/schema';
 import { uploadSkinPhoto } from '@/lib/supabase/storage';
 import { getUserId } from '@/lib/session';
 
-/** Obergrenze für ein einzelnes Bild (nach der Verkleinerung im Browser). */
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 
+const base64Schema = z
+  .string()
+  .min(1)
+  .refine((value) => /^data:image\/(jpeg|jpg|png|webp|heic|heif);base64,/.test(value), {
+    message: 'Es wird ein Bild im Data-URL-Format erwartet.',
+  });
+
 const bodySchema = z.object({
-  imageBase64: z
-    .string()
-    .min(1)
-    .refine((value) => /^data:image\/(jpeg|jpg|png|webp|heic|heif);base64,/.test(value), {
-      message: 'Es wird ein Bild im Data-URL-Format erwartet.',
-    }),
+  frontBase64: base64Schema,
+  leftBase64: base64Schema,
+  rightBase64: base64Schema,
 });
 
 export async function POST(request: Request) {
@@ -33,33 +36,46 @@ export async function POST(request: Request) {
   const parsed = bodySchema.safeParse(payload);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: 'Es wurde kein gültiges Bild übermittelt.' },
+      { error: 'Es wurden keine gültigen Bilder übermittelt.' },
       { status: 400 }
     );
   }
 
-  const { imageBase64 } = parsed.data;
-  const base64Length = imageBase64.length - (imageBase64.indexOf(',') + 1);
-  if (base64Length * 0.75 > MAX_IMAGE_BYTES) {
-    return NextResponse.json(
-      { error: 'Das Bild ist zu gross. Bitte nimm ein neues Foto auf.' },
-      { status: 413 }
-    );
+  const { frontBase64, leftBase64, rightBase64 } = parsed.data;
+
+  for (const b64 of [frontBase64, leftBase64, rightBase64]) {
+    const base64Length = b64.length - (b64.indexOf(',') + 1);
+    if (base64Length * 0.75 > MAX_IMAGE_BYTES) {
+      return NextResponse.json(
+        { error: 'Eines der Bilder ist zu gross. Bitte nimm neue Fotos auf.' },
+        { status: 413 }
+      );
+    }
   }
 
   try {
-    const path = await uploadSkinPhoto(imageBase64, userId);
+    const [frontPath, leftPath, rightPath] = await Promise.all([
+      uploadSkinPhoto(frontBase64, userId),
+      uploadSkinPhoto(leftBase64, userId),
+      uploadSkinPhoto(rightBase64, userId),
+    ]);
 
     const [photo] = await db
       .insert(skinPhotos)
-      .values({ userId, imageUrl: path, takenAt: new Date() })
+      .values({ 
+        userId, 
+        frontImageUrl: frontPath,
+        leftImageUrl: leftPath,
+        rightImageUrl: rightPath,
+        takenAt: new Date() 
+      })
       .returning({ id: skinPhotos.id });
 
     return NextResponse.json({ photoId: photo.id });
   } catch (error) {
     console.error('Upload fehlgeschlagen:', error);
     return NextResponse.json(
-      { error: 'Das Foto konnte nicht gespeichert werden.' },
+      { error: 'Die Fotos konnten nicht gespeichert werden.' },
       { status: 500 }
     );
   }

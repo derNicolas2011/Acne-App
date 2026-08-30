@@ -21,7 +21,7 @@ export default async function ComparePage() {
     analysisId: entry.analysisId,
     date: entry.date,
     score: entry.score,
-    signedUrl: entry.signedUrl,
+    frontPhotoUrl: entry.frontPhotoUrl,
   }));
 
   return (

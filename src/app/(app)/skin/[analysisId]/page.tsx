@@ -56,10 +56,10 @@ export default async function AnalysisResultPage({
       <PageBody>
         {/* Foto und Score */}
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-          {analysis.photoUrl ? (
+          {analysis.frontPhotoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={analysis.photoUrl}
+              src={analysis.frontPhotoUrl}
               alt={`Hautfoto vom ${dateLabel}`}
               className="aspect-[3/4] w-full rounded-2xl border border-border object-cover sm:w-48"
             />

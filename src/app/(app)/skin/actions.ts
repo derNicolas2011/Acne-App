@@ -16,7 +16,12 @@ export async function deleteSkinEntry(analysisId: string) {
   const userId = await requireUserId();
 
   const [entry] = await db
-    .select({ photoId: skinPhotos.id, imagePath: skinPhotos.imageUrl })
+    .select({
+      photoId: skinPhotos.id,
+      front: skinPhotos.frontImageUrl,
+      left: skinPhotos.leftImageUrl,
+      right: skinPhotos.rightImageUrl
+    })
     .from(skinAnalyses)
     .innerJoin(skinPhotos, eq(skinAnalyses.skinPhotoId, skinPhotos.id))
     .where(and(eq(skinAnalyses.id, analysisId), eq(skinAnalyses.userId, userId)))
@@ -25,7 +30,7 @@ export async function deleteSkinEntry(analysisId: string) {
   if (!entry) throw new Error('Eintrag nicht gefunden');
 
   try {
-    await deleteSkinPhoto(entry.imagePath);
+    await deleteSkinPhoto([entry.front, entry.left, entry.right]);
   } catch (error) {
     // Die Datenbankeinträge werden trotzdem entfernt; eine verwaiste Datei
     // ist besser als ein Datensatz, der auf ein "gelöschtes" Bild zeigt.

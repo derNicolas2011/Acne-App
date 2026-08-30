@@ -9,27 +9,31 @@ import { ImageError, prepareImage } from '@/lib/image';
 import { cn } from '@/lib/utils';
 
 type Phase = 'idle' | 'preparing' | 'uploading' | 'analyzing' | 'error';
+type View = 'front' | 'left' | 'right';
+type Previews = Record<View, string | null>;
+
+const VIEWS: { id: View; label: string }[] = [
+  { id: 'front', label: 'Vorne' },
+  { id: 'left', label: 'Linke Wange' },
+  { id: 'right', label: 'Rechte Wange' },
+];
 
 const PHASE_LABEL: Record<Exclude<Phase, 'idle' | 'error'>, string> = {
   preparing: 'Bild wird vorbereitet …',
-  uploading: 'Foto wird hochgeladen …',
+  uploading: 'Fotos werden hochgeladen …',
   analyzing: 'Hautbild wird analysiert …',
 };
 
-/** Fortschritt der drei Schritte — gibt der Wartezeit eine Struktur. */
 const PHASE_PROGRESS: Record<Exclude<Phase, 'idle' | 'error'>, number> = {
   preparing: 20,
   uploading: 55,
   analyzing: 90,
 };
 
-/**
- * Foto aufnehmen → hochladen → analysieren, in einem Fluss.
- * Der Weg von "App offen" bis "Analyse läuft" ist bewusst zwei Taps lang.
- */
 export function SkinCapture() {
   const router = useRouter();
-  const [preview, setPreview] = useState<string | null>(null);
+  const [previews, setPreviews] = useState<Previews>({ front: null, left: null, right: null });
+  const [activeView, setActiveView] = useState<View>('front');
   const [phase, setPhase] = useState<Phase>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showTips, setShowTips] = useState(false);
@@ -38,10 +42,10 @@ export function SkinCapture() {
   const galleryRef = useRef<HTMLInputElement>(null);
 
   const busy = phase === 'preparing' || phase === 'uploading' || phase === 'analyzing';
+  const allCaptured = previews.front && previews.left && previews.right;
 
   const handleFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    // Zurücksetzen, damit dieselbe Datei erneut gewählt werden kann.
     event.target.value = '';
     if (!file) return;
 
@@ -50,8 +54,13 @@ export function SkinCapture() {
 
     try {
       const prepared = await prepareImage(file);
-      setPreview(prepared.dataUrl);
+      setPreviews((prev) => ({ ...prev, [activeView]: prepared.dataUrl }));
       setPhase('idle');
+      
+      // Auto-advance to next empty view
+      if (activeView === 'front' && !previews.left) setActiveView('left');
+      else if (activeView === 'left' && !previews.right) setActiveView('right');
+      else if (activeView === 'front' && !previews.right) setActiveView('right');
     } catch (error) {
       setPhase('error');
       setErrorMessage(
@@ -63,7 +72,7 @@ export function SkinCapture() {
   };
 
   const startAnalysis = async () => {
-    if (!preview) return;
+    if (!allCaptured) return;
     setErrorMessage(null);
 
     try {
@@ -71,11 +80,15 @@ export function SkinCapture() {
       const uploadResponse = await fetch('/api/skin/upload', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageBase64: preview }),
+        body: JSON.stringify({ 
+          frontBase64: previews.front,
+          leftBase64: previews.left,
+          rightBase64: previews.right,
+        }),
       });
       if (!uploadResponse.ok) {
         const body = await uploadResponse.json().catch(() => null);
-        throw new Error(body?.error ?? 'Das Foto konnte nicht gespeichert werden.');
+        throw new Error(body?.error ?? 'Die Fotos konnten nicht gespeichert werden.');
       }
       const { photoId } = await uploadResponse.json();
 
@@ -122,11 +135,29 @@ export function SkinCapture() {
         tabIndex={-1}
       />
 
-      {/* Vorschau */}
+      <div className="flex justify-center gap-2">
+        {VIEWS.map((view) => (
+          <button
+            key={view.id}
+            type="button"
+            onClick={() => setActiveView(view.id)}
+            className={cn(
+              'px-3 py-1.5 text-sm rounded-full font-medium transition-colors',
+              activeView === view.id
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80'
+            )}
+          >
+            {view.label}
+            {previews[view.id] && ' ✓'}
+          </button>
+        ))}
+      </div>
+
       <div className="relative mx-auto aspect-[3/4] w-full max-w-sm overflow-hidden rounded-2xl border border-border bg-muted">
-        {preview ? (
+        {previews[activeView] ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={preview} alt="Vorschau des aufgenommenen Fotos" className="size-full object-cover" />
+          <img src={previews[activeView]!} alt={`Vorschau ${activeView}`} className="size-full object-cover" />
         ) : (
           <button
             type="button"
@@ -134,7 +165,7 @@ export function SkinCapture() {
             className="flex size-full flex-col items-center justify-center gap-3 px-8 text-center text-muted-foreground press"
           >
             <Camera className="size-9" strokeWidth={1.5} aria-hidden />
-            <span className="text-[0.875rem]">Tippen, um ein Foto aufzunehmen</span>
+            <span className="text-[0.875rem]">Tippen, um {VIEWS.find((v) => v.id === activeView)?.label} aufzunehmen</span>
           </button>
         )}
 
@@ -167,7 +198,7 @@ export function SkinCapture() {
               onClick={() => {
                 setPhase('idle');
                 setErrorMessage(null);
-                if (preview) void startAnalysis();
+                if (allCaptured) void startAnalysis();
               }}
               className="inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-[0.875rem] font-semibold text-background press"
             >
@@ -178,9 +209,8 @@ export function SkinCapture() {
         />
       )}
 
-      {/* Aktionen */}
       <div className="mx-auto w-full max-w-sm space-y-3">
-        {preview && (
+        {allCaptured && (
           <button
             type="button"
             onClick={startAnalysis}
@@ -203,7 +233,7 @@ export function SkinCapture() {
             className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-2xl border border-border bg-card text-[0.875rem] font-semibold press disabled:opacity-50"
           >
             <Camera className="size-[1.125rem]" strokeWidth={2} aria-hidden />
-            {preview ? 'Neu aufnehmen' : 'Kamera'}
+            {previews[activeView] ? 'Neu aufnehmen' : 'Kamera'}
           </button>
           <button
             type="button"
@@ -217,7 +247,6 @@ export function SkinCapture() {
         </div>
       </div>
 
-      {/* Aufnahmetipps */}
       <Surface padded={false} className="overflow-hidden">
         <button
           type="button"

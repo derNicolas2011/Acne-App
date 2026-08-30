@@ -20,9 +20,9 @@ export default async function HomePage() {
   ]);
 
   let photoUrl: string | null = null;
-  if (todayAnalysis?.imagePath) {
+  if (todayAnalysis?.frontImagePath) {
     try {
-      photoUrl = await getSkinPhotoUrl(todayAnalysis.imagePath);
+      photoUrl = await getSkinPhotoUrl(todayAnalysis.frontImagePath);
     } catch (error) {
       console.error('Vorschaubild konnte nicht geladen werden:', error);
     }

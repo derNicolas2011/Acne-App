@@ -22,7 +22,9 @@ export const users = pgTable('users', {
 export const skinPhotos = pgTable('skinPhotos', {
   id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
   userId: text('userId').references(() => users.id),
-  imageUrl: text('imageUrl').notNull(),
+  frontImageUrl: text('frontImageUrl').notNull(),
+  leftImageUrl: text('leftImageUrl').notNull(),
+  rightImageUrl: text('rightImageUrl').notNull(),
   takenAt: timestamp('takenAt', { withTimezone: true }).notNull(),
   createdAt: timestamp('createdAt', { withTimezone: true }).defaultNow(),
 });
