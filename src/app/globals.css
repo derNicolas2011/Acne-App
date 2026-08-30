@@ -1,26 +1,330 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/*
+  Design-System
+  -------------
+  Ruhig, hochwertig, medizinisch seriös ohne klinische Kälte.
+  Grundlage: warmes Papierweiss als Fläche, weisse Karten für Inhalt,
+  ein einziger gedämpfter Türkiston als Akzent. Farbe wird sparsam und
+  ausschliesslich bedeutungstragend eingesetzt (Score, Status, Trend).
+*/
+
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Bedeutungstragende Statusfarben */
+  --color-positive: var(--positive);
+  --color-positive-soft: var(--positive-soft);
+  --color-caution: var(--caution);
+  --color-caution-soft: var(--caution-soft);
+  --color-alert: var(--alert);
+  --color-alert-soft: var(--alert-soft);
+
+  /* Charts: eine Familie statt Regenbogen */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --font-heading: var(--font-sans);
+
+  --radius-sm: calc(var(--radius) - 6px);
+  --radius-md: calc(var(--radius) - 3px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 10px);
+  --radius-3xl: calc(var(--radius) + 18px);
+
+  --shadow-card: 0 1px 2px oklch(0.2 0.02 260 / 0.04), 0 1px 3px oklch(0.2 0.02 260 / 0.03);
+  --shadow-raised: 0 2px 4px oklch(0.2 0.02 260 / 0.04), 0 6px 16px oklch(0.2 0.02 260 / 0.06);
+  --shadow-float: 0 4px 12px oklch(0.2 0.02 260 / 0.08), 0 12px 32px oklch(0.2 0.02 260 / 0.10);
+
+  --ease-out-soft: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
+:root {
+  color-scheme: light;
+
+  /* Flächen */
+  --background: oklch(0.981 0.003 95);
+  --foreground: oklch(0.205 0.012 265);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.205 0.012 265);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.205 0.012 265);
+
+  /* Akzent */
+  --primary: oklch(0.52 0.076 197);
+  --primary-foreground: oklch(0.99 0.002 197);
+
+  --secondary: oklch(0.958 0.004 95);
+  --secondary-foreground: oklch(0.28 0.012 265);
+  --muted: oklch(0.958 0.004 95);
+  --muted-foreground: oklch(0.518 0.012 265);
+  --accent: oklch(0.952 0.012 197);
+  --accent-foreground: oklch(0.36 0.05 197);
+
+  --destructive: oklch(0.556 0.163 25);
+  --destructive-foreground: oklch(0.99 0.002 25);
+
+  --border: oklch(0.912 0.004 95);
+  --input: oklch(0.895 0.005 95);
+  --ring: oklch(0.52 0.076 197);
+
+  /* Status */
+  --positive: oklch(0.565 0.101 163);
+  --positive-soft: oklch(0.955 0.028 163);
+  --caution: oklch(0.640 0.108 74);
+  --caution-soft: oklch(0.962 0.036 84);
+  --alert: oklch(0.566 0.152 25);
+  --alert-soft: oklch(0.958 0.024 25);
+
+  /* Charts */
+  --chart-1: oklch(0.52 0.076 197);
+  --chart-2: oklch(0.63 0.062 197);
+  --chart-3: oklch(0.565 0.101 163);
+  --chart-4: oklch(0.640 0.108 74);
+  --chart-5: oklch(0.566 0.152 25);
+
+  --sidebar: oklch(0.981 0.003 95);
+  --sidebar-foreground: oklch(0.205 0.012 265);
+  --sidebar-primary: oklch(0.52 0.076 197);
+  --sidebar-primary-foreground: oklch(0.99 0.002 197);
+  --sidebar-accent: oklch(0.952 0.012 197);
+  --sidebar-accent-foreground: oklch(0.36 0.05 197);
+  --sidebar-border: oklch(0.912 0.004 95);
+  --sidebar-ring: oklch(0.52 0.076 197);
+
+  --radius: 0.875rem;
+
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+}
+
+.dark {
+  color-scheme: dark;
+
+  --background: oklch(0.171 0.008 265);
+  --foreground: oklch(0.955 0.004 95);
+  --card: oklch(0.216 0.010 265);
+  --card-foreground: oklch(0.955 0.004 95);
+  --popover: oklch(0.232 0.010 265);
+  --popover-foreground: oklch(0.955 0.004 95);
+
+  --primary: oklch(0.735 0.086 191);
+  --primary-foreground: oklch(0.185 0.020 197);
+
+  --secondary: oklch(0.268 0.010 265);
+  --secondary-foreground: oklch(0.955 0.004 95);
+  --muted: oklch(0.262 0.010 265);
+  --muted-foreground: oklch(0.702 0.010 265);
+  --accent: oklch(0.295 0.024 197);
+  --accent-foreground: oklch(0.855 0.048 191);
+
+  --destructive: oklch(0.665 0.158 25);
+  --destructive-foreground: oklch(0.985 0.004 25);
+
+  --border: oklch(1 0 0 / 11%);
+  --input: oklch(1 0 0 / 16%);
+  --ring: oklch(0.735 0.086 191);
+
+  --positive: oklch(0.735 0.108 165);
+  --positive-soft: oklch(0.322 0.048 165);
+  --caution: oklch(0.792 0.108 78);
+  --caution-soft: oklch(0.338 0.048 74);
+  --alert: oklch(0.702 0.148 25);
+  --alert-soft: oklch(0.328 0.058 25);
+
+  --chart-1: oklch(0.735 0.086 191);
+  --chart-2: oklch(0.612 0.066 194);
+  --chart-3: oklch(0.735 0.108 165);
+  --chart-4: oklch(0.792 0.108 78);
+  --chart-5: oklch(0.702 0.148 25);
+
+  --sidebar: oklch(0.196 0.009 265);
+  --sidebar-foreground: oklch(0.955 0.004 95);
+  --sidebar-primary: oklch(0.735 0.086 191);
+  --sidebar-primary-foreground: oklch(0.185 0.020 197);
+  --sidebar-accent: oklch(0.295 0.024 197);
+  --sidebar-accent-foreground: oklch(0.855 0.048 191);
+  --sidebar-border: oklch(1 0 0 / 11%);
+  --sidebar-ring: oklch(0.735 0.086 191);
+}
+
+/* Systemeinstellung respektieren, solange nichts explizit gewählt wurde. */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  :root:not(.light):not(.dark) {
+    color-scheme: dark;
+
+    --background: oklch(0.171 0.008 265);
+    --foreground: oklch(0.955 0.004 95);
+    --card: oklch(0.216 0.010 265);
+    --card-foreground: oklch(0.955 0.004 95);
+    --popover: oklch(0.232 0.010 265);
+    --popover-foreground: oklch(0.955 0.004 95);
+    --primary: oklch(0.735 0.086 191);
+    --primary-foreground: oklch(0.185 0.020 197);
+    --secondary: oklch(0.268 0.010 265);
+    --secondary-foreground: oklch(0.955 0.004 95);
+    --muted: oklch(0.262 0.010 265);
+    --muted-foreground: oklch(0.702 0.010 265);
+    --accent: oklch(0.295 0.024 197);
+    --accent-foreground: oklch(0.855 0.048 191);
+    --destructive: oklch(0.665 0.158 25);
+    --destructive-foreground: oklch(0.985 0.004 25);
+    --border: oklch(1 0 0 / 11%);
+    --input: oklch(1 0 0 / 16%);
+    --ring: oklch(0.735 0.086 191);
+    --positive: oklch(0.735 0.108 165);
+    --positive-soft: oklch(0.322 0.048 165);
+    --caution: oklch(0.792 0.108 78);
+    --caution-soft: oklch(0.338 0.048 74);
+    --alert: oklch(0.702 0.148 25);
+    --alert-soft: oklch(0.328 0.058 25);
+    --chart-1: oklch(0.735 0.086 191);
+    --chart-2: oklch(0.612 0.066 194);
+    --chart-3: oklch(0.735 0.108 165);
+    --chart-4: oklch(0.792 0.108 78);
+    --chart-5: oklch(0.702 0.148 25);
+    --sidebar: oklch(0.196 0.009 265);
+    --sidebar-foreground: oklch(0.955 0.004 95);
+    --sidebar-primary: oklch(0.735 0.086 191);
+    --sidebar-primary-foreground: oklch(0.185 0.020 197);
+    --sidebar-accent: oklch(0.295 0.024 197);
+    --sidebar-accent-foreground: oklch(0.855 0.048 191);
+    --sidebar-border: oklch(1 0 0 / 11%);
+    --sidebar-ring: oklch(0.735 0.086 191);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  * {
+    @apply border-border outline-ring/40;
+  }
+
+  html {
+    @apply font-sans;
+    -webkit-text-size-adjust: 100%;
+    /* Verhindert horizontales Wackeln bei breiten Inhalten. */
+    overflow-x: hidden;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    /* Kein Gummiband-Scrollen über den Rand hinaus auf iOS. */
+    overscroll-behavior-y: none;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Überschriften ruhiger und enger setzen — wirkt hochwertiger. */
+  h1, h2, h3 {
+    @apply tracking-[-0.018em];
+    text-wrap: balance;
+  }
+
+  /* Zahlen in Tabellen und Scores sollen nicht springen. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Auf Touch-Geräten kein blauer Tap-Highlight. */
+  button, a, [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  ::selection {
+    background: var(--accent);
+    color: var(--accent-foreground);
+  }
+}
+
+@layer utilities {
+  /* Safe-Area (iPhone Home-Indicator / Notch) — in Tailwind v4 nicht eingebaut. */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  .mb-safe {
+    margin-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  /* Höhe der Bottom-Nav inkl. Safe-Area — für den Scroll-Abstand. */
+  .pb-nav {
+    padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+  .shadow-raised {
+    box-shadow: var(--shadow-raised);
+  }
+  .shadow-float {
+    box-shadow: var(--shadow-float);
+  }
+
+  /* Horizontale Scroller ohne sichtbare Leiste. */
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Dezenter Druck-Feedback für Touch-Ziele. */
+  .press {
+    transition: transform 140ms var(--ease-out-soft), background-color 140ms var(--ease-out-soft);
+  }
+  .press:active {
+    transform: scale(0.975);
+  }
+}
+
+/* Wer Animationen reduziert haben will, bekommt sie nicht. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

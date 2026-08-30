@@ -1,36 +1,81 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Skin Tracker
 
-## Getting Started
+Persönliche Web-App zum Tracking von Hautbild, Skincare, Medikamenten und Ernährung.
+Mobile-First, ausgelegt auf einen einzelnen Nutzer — die Datenstruktur ist
+mehrbenutzerfähig vorbereitet.
 
-First, run the development server:
+## Stack
+
+| Bereich | Technologie |
+| --- | --- |
+| Framework | Next.js 16 (App Router, Server Components, Server Actions) |
+| UI | Tailwind CSS v4, eigenes Design-System in `src/app/globals.css` |
+| Datenbank | Supabase Postgres via Drizzle ORM |
+| Storage | Supabase Storage, private Buckets + signierte URLs |
+| Auth | Auth.js (NextAuth v5), Credentials, JWT-Session |
+| KI | Vercel AI SDK mit Google Gemini |
+
+## Einrichtung
 
 ```bash
+npm install
+cp .env.local.example .env.local   # Werte eintragen
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Benötigte Supabase-Buckets (beide **privat**): `skin-photos`, `meal-photos`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Schema in die Datenbank bringen:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npx drizzle-kit push
+```
 
-## Learn More
+Die `users`-Zeile für das konfigurierte Konto wird bei der ersten
+erfolgreichen Anmeldung automatisch angelegt.
 
-To learn more about Next.js, take a look at the following resources:
+## Architektur
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+src/
+  app/
+    (app)/        Angemeldeter Bereich; das Layout erzwingt die Session
+    api/          Upload, Analyse, Datenexport
+    login/
+  components/
+    shared/       Design-System-Bausteine (Surface, PageHeader, States …)
+    dashboard/ skin/ nutrition/ treatment/ timeline/ analysis/ settings/
+  lib/
+    ai/           Prompts und typisierte Modellaufrufe
+    db/           Drizzle-Schema und Verbindung
+    queries/      Lesezugriffe, immer auf eine userId eingeschränkt
+    date.ts       Alle Tagesgrenzen in Europe/Zurich
+    routine.ts    Häufigkeits- und Compliance-Regeln
+    score.ts      Deutung des Skin Scores (höher = besser)
+    insights.ts   Langzeitvergleiche über die eigenen Daten
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Sicherheit
 
-## Deploy on Vercel
+- `src/proxy.ts` ist nur ein günstiges UX-Gate (Cookie vorhanden?).
+  Die eigentliche Prüfung sind `requireUser()` / `requireUserId()` in jeder
+  Page, Server Action und Route.
+- Jede Query ist auf die `userId` der Session eingeschränkt.
+- Bilder liegen in privaten Buckets; Zugriff nur über signierte URLs mit
+  kurzer Gültigkeit. Es gibt keine öffentlichen Bild-URLs.
+- `src/lib/supabase/client.ts` enthält bewusst nur den Server-Client,
+  damit der Service-Role-Key nicht ins Browser-Bundle geraten kann.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Umgang mit KI-Ausgaben
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Analysen betreffen ausschliesslich Hautmerkmale, nie das Aussehen.
+- Ergebnisse werden als Beobachtung dargestellt, nie als Diagnose.
+- Die Langzeitauswertung vergleicht Tagesgruppen und benennt
+  Stichprobengrössen; sie behauptet keine Ursachen.
+- Reicht die Datenmenge nicht, wird das ausgewiesen statt geschätzt.
+
+## Deployment (Vercel)
+
+Alle Variablen aus `.env.local.example` im Projekt hinterlegen.
+`AUTH_SECRET` muss in Produktion gesetzt sein. Secrets stehen
+ausschliesslich serverseitig; im Client liegen nur `NEXT_PUBLIC_*`-Werte.
