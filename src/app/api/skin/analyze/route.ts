@@ -100,7 +100,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Analyse fehlgeschlagen:', error);
     return NextResponse.json(
-      { error: 'Die Analyse konnte nicht durchgeführt werden.' },
+      { error: `Die Analyse konnte nicht durchgeführt werden. Details: ${error instanceof Error ? error.message : String(error)}` },
       { status: 500 }
     );
   }
